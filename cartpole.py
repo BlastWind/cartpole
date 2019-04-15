@@ -1,3 +1,10 @@
+'''
+code by https://github.com/gsurma
+I modified it so that it saves weights
+Greg allowed the use of this code free of charge,
+please still credit him if you were to use this!
+'''
+
 import random
 import gym
 import numpy as np
@@ -20,7 +27,6 @@ BATCH_SIZE = 20
 EXPLORATION_MAX = 1.0
 EXPLORATION_MIN = 0.01
 EXPLORATION_DECAY = 0.995
-
 
 class DQNSolver:
 
@@ -58,7 +64,8 @@ class DQNSolver:
             self.model.fit(state, q_values, verbose=0)
         self.exploration_rate *= EXPLORATION_DECAY
         self.exploration_rate = max(EXPLORATION_MIN, self.exploration_rate)
-
+    def save_weight(self, t):
+        self.model.save_weights('./weights/model_weights_at_step' + str(t) + '.h5')
 
 def cartpole():
     env = gym.make(ENV_NAME)
@@ -67,11 +74,13 @@ def cartpole():
     action_space = env.action_space.n
     dqn_solver = DQNSolver(observation_space, action_space)
     run = 0
-    while True:
+    for t in range(101):
         run += 1
         state = env.reset()
         state = np.reshape(state, [1, observation_space])
         step = 0
+        if(t % 10 == 0):
+            dqn_solver.save_weight(t)
         while True:
             step += 1
             #env.render()
@@ -82,7 +91,7 @@ def cartpole():
             dqn_solver.remember(state, action, reward, state_next, terminal)
             state = state_next
             if terminal:
-                print "Run: " + str(run) + ", exploration: " + str(dqn_solver.exploration_rate) + ", score: " + str(step)
+                print("Run: " + str(run) + ", exploration: " + str(dqn_solver.exploration_rate) + ", score: " + str(step))
                 score_logger.add_score(step, run)
                 break
             dqn_solver.experience_replay()
@@ -90,3 +99,6 @@ def cartpole():
 
 if __name__ == "__main__":
     cartpole()
+   
+   
+
